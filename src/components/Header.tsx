@@ -23,7 +23,6 @@ const Header: React.FC = () => {
                             alt='a user avatar'
                             width={64}
                             height={64}
-                            placeholder={'blur'}
                         />
                     </div>
                 )}

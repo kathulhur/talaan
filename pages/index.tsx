@@ -1,13 +1,9 @@
 import Footer from '../src/components/Footer'
 import Header from '../src/components/Header'
-import {PlusIcon} from '@heroicons/react/24/outline'
 import TodoLists from '../src/components/TodoLists'
-import AddTodoModal from '../src/components/AddTodoModal'
-import { useEffect, useState } from 'react'
-import {  GetServerSideProps, NextPage } from 'next'
-import { useSession } from 'next-auth/react'
+import { NextPage } from 'next'
+import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/router'
-
 
 export interface HomePageProps {
   // session: Session
@@ -25,7 +21,7 @@ export interface HomePageProps {
     }
 
     if (status === 'unauthenticated') {
-        router.push('/api/auth/signin?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2F')
+        signIn()
     }
 
 
