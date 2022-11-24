@@ -7,10 +7,10 @@ const handleTodoListDelete = async (req: NextApiRequest, res: NextApiResponse) =
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' })
     }
-    const data = JSON.parse(req.body)
+    const todoList = req.body
     const deletedTodoList = await prisma.todoList.update({
         where: {
-            id: parseInt(data.todoList.id as string)
+            id: parseInt(todoList.id as string)
         },
         data: {
             deleted: true

@@ -7,10 +7,10 @@ const createTodoItem = async (req: NextApiRequest, res: NextApiResponse) => {
         return res.status(405).json({ message: 'Method not allowed' })
     }
 
-    const todoItemData = JSON.parse(req.body)
+    const todoItemInput = req.body
 
     const savedTodoItem = await prisma.item.create({
-        data: todoItemData
+        data: todoItemInput
     })
 
     res.json(savedTodoItem)

@@ -10,15 +10,11 @@ export interface TodoListsProps {
 }
 
 async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
-    const response = await axios.post('/api/todolists/create', {
-        method: 'POST',
-        data: JSON.stringify(todoListCreateInput)
-    })
+    const response = await axios.post('/api/todolists/create', todoListCreateInput)
 
-    if (response.statusText === 'OK') {
+    if (response.statusText !== 'OK') {
         throw new Error(response.statusText)
     }
-    console.log(response.data)
     return response.data
 }
 
@@ -28,7 +24,7 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
     const [isLoading, setIsLoading] = useState(false)
     const [hasError, setHasError] = useState(false)
     useEffect(() => {
-        console.log('TodoLists: fetchTodolists')
+        // console.log('TodoLists: fetchTodolists')
         setIsLoading(true)
         async function fetchTodoLists() {
             const response = await axios.get(`/api/todolists?userId=${userId}`)
@@ -72,16 +68,13 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
 
     const handleDelete = async (todoList: TodoList) => {
         // console.log('TodoLists: handleDelete')
-        const response = await fetch(`/api/todolists/delete`, {
-            method: 'POST',
-            body: JSON.stringify({todoList})
-        })
+        const response = await axios.post(`/api/todolists/delete`, todoList)
 
-        if (!response.ok) {
+        if (response.statusText !== 'OK') {
             throw new Error(response.statusText)
         }
 
-        const deletedTodoList = await response.json()
+        const deletedTodoList = response.data
 
         const deletedTodoListIndex = todoLists.findIndex(tl => tl.id == deletedTodoList.id)
         const updatedList = [...todoLists]

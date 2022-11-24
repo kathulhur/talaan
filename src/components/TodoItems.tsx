@@ -1,21 +1,19 @@
 import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import { Item, Prisma } from "@prisma/client"
+import axios from "axios"
 import { useEffect, useState } from "react"
 import { TodoItemsProps } from "../types/propTypes"
 import TodoItem from "./TodoItem"
 
 
 async function saveTodoItem(todoItemInput: Prisma.ItemCreateInput) {
-    const response = await fetch('/api/todoitems/create', {
-        method: 'POST',
-        body: JSON.stringify(todoItemInput)
-    })
+    const response = await axios.post('/api/todoitems/create', todoItemInput)
 
-    if (!response.ok) {
+    if (response.statusText !== 'OK') {
         throw new Error(response.statusText)
     }
 
-    return await response.json()
+    return await response.data
 }
 
 
@@ -32,14 +30,14 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
         setIsLoading(true)
         async function fetchTodoItems() {
             // console.log('TodoItems: fetchTodoItems')
-            const response = await fetch(`/api/todoitems?todoId=${todoListId}`)
+            const response = await axios.get(`/api/todoitems?todoId=${todoListId}`)
             
-            if(!response.ok) {
+            if(response.statusText !== 'OK') {
                 setHasError(true)
                 setIsLoading(false)
                 return
             }
-            const data = await response.json()
+            const data = await response.data
 
             if (data.todoItems) {
                 setTodoItems(data.todoItems)
@@ -53,16 +51,16 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
 
     const handleUpdate = async (todoItem: Item, itemUpdateInput: Prisma.ItemUpdateInput) => {
         // console.log('TodoItems: handleUpdate')
-        const response = await fetch(`/api/todoitems/update`, {
-            method: 'POST',
-            body: JSON.stringify({todoItem, itemUpdateInput})
+        const response = await axios.post(`/api/todoitems/update`,{
+            todoItem, 
+            itemUpdateInput
         })
 
-        if (!response.ok) {
+        if (response.statusText !== 'OK') {
             throw new Error(response.statusText)
         }
 
-        const updatedTodoItem = await response.json()
+        const updatedTodoItem = await response.data
         const updatedTodoItemIndex = todoItems.findIndex(i => i.id == todoItem.id)
         const updatedList = [...todoItems]
         updatedList[updatedTodoItemIndex] = updatedTodoItem
@@ -72,16 +70,13 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
 
     const handleDelete = async (deletedItem: Item) => {
         // console.log('TodoItems: handleUpdate')
-        const response = await fetch(`/api/todoitems/delete`, {
-            method: 'POST',
-            body: JSON.stringify({deletedItem})
-        })
+        const response = await axios.post(`/api/todoitems/delete`, deletedItem)
 
-        if (!response.ok) {
+        if (response.statusText !== 'OK') {
             throw new Error(response.statusText)
         }
 
-        const deletedTodoItem = await response.json()
+        const deletedTodoItem = await response.data
 
         const deletedTodoItemIndex = todoItems.findIndex(i => i.id == deletedItem.id)
         const updatedList = [...todoItems]

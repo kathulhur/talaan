@@ -6,11 +6,11 @@ const createTodoList = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' })
     }
-
-    const todoListData = JSON.parse(req.body)
+    
+    const todoListCreateInput = req.body
 
     const savedTodoList = await prisma.todoList.create({
-        data: todoListData
+        data: todoListCreateInput
     })
 
     res.json(savedTodoList)
