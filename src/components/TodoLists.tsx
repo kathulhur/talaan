@@ -1,13 +1,90 @@
 import { PlusIcon } from "@heroicons/react/24/outline"
 import { Prisma, TodoList } from "@prisma/client"
 import axios from "axios"
-import { useEffect, useState } from "react"
+import { Reducer, useEffect, useReducer, useState } from "react"
 import AddTodoModal from "./AddTodoModal"
 import TodoListComponent from "./TodoList"
 
 export interface TodoListsProps {
     userId?: string
 }
+
+export interface todoListsState {
+    data: TodoList[]
+    isLoading: boolean
+    hasError: boolean
+}
+
+type TodoListsAction = {
+    type: string
+    payload?: any
+}
+
+
+const todoListsReducer: Reducer<todoListsState, TodoListsAction> = (state: todoListsState, action: TodoListsAction): todoListsState => {
+    switch (action.type) {
+        case 'TODOLISTS_FETCH_INIT':
+            return {
+                ...state,
+                isLoading: true,
+                hasError: false,
+            }
+
+        case 'TODOLISTS_FETCH_SUCCESS':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: action.payload as TodoList[]
+            }
+
+        case 'TODOLISTS_FETCH_ERROR':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: true,
+                data: action.payload as TodoList[]
+            }
+
+        case 'DELETE_TODOLIST':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: state.data.filter(tdl => (action.payload as TodoList).id !== tdl.id)
+            }
+
+        
+        case 'CREATE_TODOLIST':
+            const newList = [...state.data]
+            newList.push(action.payload as TodoList)
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: newList
+            }
+
+        case 'UPDATE_TODOLIST':
+            const updatedTodoList = (action.payload as TodoList)
+            const updatedTodoListIndex = state.data.findIndex((t) => t.id == updatedTodoList.id)
+            const updatedList = [...state.data]
+            updatedList[updatedTodoListIndex] = updatedTodoList
+
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: updatedList
+            }
+
+
+        default:
+            throw new Error()
+    }
+}
+
+
 
 async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
     const response = await axios.post('/api/todolists/create', todoListCreateInput)
@@ -19,38 +96,33 @@ async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
 }
 
 const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
+    const [state, dispatch] = useReducer(todoListsReducer, { data: [], isLoading: false, hasError: false})
+
     const [show, setShow] = useState(false)
     const [todoLists, setTodoLists] = useState<TodoList[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [hasError, setHasError] = useState(false)
-    useEffect(() => {
-        // console.log('TodoLists: fetchTodolists')
-        setIsLoading(true)
-        async function fetchTodoLists() {
-            const response = await axios.get(`/api/todolists?userId=${userId}`)
-            if(response.statusText !== 'OK') {
-                setHasError(true)
-                setIsLoading(false)
-                return
-            }
 
-            const data = await response.data
-            if (data.todoLists) {
-                setTodoLists(data.todoLists)
-                setIsLoading(false)
+    useEffect(() => {
+        
+        const fetchTodoLists = async () => {
+            try {
+                const response = await axios.get(`/api/todolists?userId=${userId}`)
+                dispatch({ type: 'TODOLISTS_FETCH_SUCCESS', payload: response.data.todoLists })
+            } catch {
+                dispatch({ type: 'TODOLISTS_FETCH_ERROR'})
             }
         }
-        
+        dispatch({ type: 'TODOLISTS_FETCH_INIT'})
         fetchTodoLists()
 
     }, [userId])
 
     const handleUpdate = (updatedTodoList: TodoList) => {
         // console.log('TodoLists: handleUpdate')
-        const updatedTodoListIndex = todoLists.findIndex((t) => t.id == updatedTodoList.id)
-        const updatedList = [...todoLists]
-        updatedList[updatedTodoListIndex] = updatedTodoList
-        setTodoLists(updatedList)
+        throw new Error('TodoLists:handleUpdate:Unimplemented')
+        // const updatedTodoListIndex = todoLists.findIndex((t) => t.id == updatedTodoList.id)
+        // const updatedList = [...todoLists]
+        // updatedList[updatedTodoListIndex] = updatedTodoList
+        // setTodoLists(updatedList)
     }
 
     const handleCreate = async (title: string, note: string) => {
@@ -62,25 +134,31 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             title,
             note
         }
-        const newlyStoredTodoItem = await saveTodoList(newTodoListInput)
-        setTodoLists([...todoLists, newlyStoredTodoItem])
+
+        try {
+            const newlyStoredTodoItem = await saveTodoList(newTodoListInput)
+            dispatch({ type: 'CREATE_TODOLIST', payload: newlyStoredTodoItem})
+        } catch {
+            throw new Error('Handle Create: Feature Unimplemented')
+        }
     }
 
     const handleDelete = async (todoList: TodoList) => {
         // console.log('TodoLists: handleDelete')
-        const response = await axios.post(`/api/todolists/delete`, todoList)
+        try {
+            const response = await axios.post(`/api/todolists/delete`, todoList)
+            if (response.statusText !== 'OK') {
+                throw new Error(response.statusText)
+            }
 
-        if (response.statusText !== 'OK') {
-            throw new Error(response.statusText)
+            const deletedTodoList = response.data
+            dispatch({ type: 'DELETE_TODOLIST', payload: deletedTodoList })
+
+        } catch {
+            throw new Error('Handle DELETE: Feature Unimplemented')
         }
-
-        const deletedTodoList = response.data
-
-        const deletedTodoListIndex = todoLists.findIndex(tl => tl.id == deletedTodoList.id)
-        const updatedList = [...todoLists]
-        updatedList.splice(deletedTodoListIndex, 1)
-        setTodoLists(updatedList)
     }
+
 return (
     <>
         <AddTodoModal show={show} setShow={setShow} onCreate={handleCreate}/>
@@ -94,7 +172,7 @@ return (
                         </button>
         </div>
         <div className='grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-12 my-12'>
-            {!isLoading && !hasError && todoLists.map( (todoList, i) => {
+            {!state.isLoading && !state.hasError && state.data.map( (todoList) => {
                 return <TodoListComponent key={todoList.id} todoList={todoList} onUpdate={handleUpdate} onDelete={handleDelete}/>
             })}
         </div>
