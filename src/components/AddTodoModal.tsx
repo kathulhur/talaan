@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client"
 import { SetStateAction, useState } from "react"
 
 export interface AddTodoModalProps {

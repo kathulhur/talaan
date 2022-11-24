@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
-
-const prisma = new PrismaClient()
+import { prisma } from '../../../src/utils/db'
 
 const createTodoItem = async (req: NextApiRequest, res: NextApiResponse) => {
     // console.log('todoitems/create')

@@ -1,10 +1,7 @@
 import NextAuth, { Account, Session, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import GithubProvider from "next-auth/providers/github"
-
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient()
-
+import { prisma } from '../../../src/utils/db'
 
 export const authOptions = {
   // Configure one or more authentication providers

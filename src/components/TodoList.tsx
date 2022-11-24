@@ -1,8 +1,7 @@
 import TodoItems from "./TodoItems"
-import {Bars3Icon, PlusCircleIcon, XMarkIcon} from '@heroicons/react/24/outline'
-import { useEffect, useState } from "react"
+import {Bars3Icon, XMarkIcon} from '@heroicons/react/24/outline'
+import { useState } from "react"
 import { TodoListProps } from "../types/propTypes"
-import { Item, Prisma } from "@prisma/client"
 
 
 const TodoList: React.FC<TodoListProps> = ({todoList, onUpdate, onDelete}) => {

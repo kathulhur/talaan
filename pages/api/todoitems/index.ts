@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from '../../../src/utils/db'
 
-const prisma = new PrismaClient()
 
 export default async function getTodoItems(req: NextApiRequest, res: NextApiResponse) {
     // console.log('todoItems/index')
