@@ -89,6 +89,7 @@ const todoListsReducer: Reducer<todoListsState, TodoListsAction> = (state: todoL
 async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
     const response = await axios.post('/api/todolists/create', todoListCreateInput)
     console.log(response.statusText)
+    console.log(response)
     console.log(response.statusText !== 'OK')
     // if (response.statusText !== 'OK') {
     //     throw new Error(response.statusText)
