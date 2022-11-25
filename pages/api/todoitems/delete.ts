@@ -8,15 +8,11 @@ const handleItemUpdate = async (req: NextApiRequest, res: NextApiResponse) => {
         return res.status(405).json({ message: 'Method not allowed' })
     }
     const todoItem = req.body
-    const deletedItem = await prisma.item.update({
+    const deletedItem = await prisma.item.delete({
         where: {
             id: parseInt(todoItem.id as string)
-        },
-        data: {
-            deleted: true
         }
     })
-
 
     res.json(deletedItem)
 }

@@ -1,3 +1,4 @@
+import { TodoList } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from '../../../src/utils/db'
 
@@ -7,13 +8,17 @@ const handleTodoListDelete = async (req: NextApiRequest, res: NextApiResponse) =
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' })
     }
-    const todoList = req.body
-    const deletedTodoList = await prisma.todoList.update({
+    const todoList = req.body as TodoList
+
+    const deletedTodoItems = await prisma.item.deleteMany({
         where: {
-            id: parseInt(todoList.id as string)
-        },
-        data: {
-            deleted: true
+            todoListId: todoList.id
+        }
+    })
+
+    const deletedTodoList = await prisma.todoList.delete({
+        where: {
+            id: todoList.id
         }
     })
 
