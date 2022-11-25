@@ -1,7 +1,7 @@
 import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import { Item, Prisma } from "@prisma/client"
 import axios from "axios"
-import { useEffect, useState } from "react"
+import { Reducer, useEffect, useReducer, useState } from "react"
 import { TodoItemsProps } from "../types/propTypes"
 import TodoItem from "./TodoItem"
 
@@ -16,72 +16,153 @@ async function saveTodoItem(todoItemInput: Prisma.ItemCreateInput) {
     return await response.data
 }
 
+export interface todoItemState {
+    data: Item[]
+    isLoading: boolean
+    hasError: boolean
+}
+
+type TodoListsAction = {
+    type: string
+    payload?: any
+}
+
+const todoItemsReducer: Reducer<todoItemState, TodoListsAction> = (state: todoItemState, action: TodoListsAction): todoItemState => {
+    switch (action.type) {
+        case 'TODOITEMS_FETCH_INIT':
+            return {
+                ...state,
+                isLoading: true,
+                hasError: false,
+            }
+
+        case 'TODOITEMS_FETCH_SUCCESS':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: action.payload as Item[]
+            }
+
+        case 'TODOITEMS_FETCH_ERROR':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: true,
+                data: action.payload as Item[]
+            }
+
+        case 'DELETE_TODOITEM':
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: state.data.filter(tdl => (action.payload as Item).id !== tdl.id)
+            }
+
+        
+        case 'CREATE_TODOITEM':
+            const newList = [...state.data]
+            newList.push(action.payload as Item)
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: newList
+            }
+
+        case 'UPDATE_TODOITEM':
+            const updatedTodoItem = (action.payload as Item)
+            const updatedTodoItemIndex = state.data.findIndex((t) => t.id == updatedTodoItem.id)
+            const updatedList = [...state.data]
+            updatedList[updatedTodoItemIndex] = updatedTodoItem
+
+            return {
+                ...state,
+                isLoading: false,
+                hasError: false,
+                data: updatedList
+            }
+
+
+        default:
+            throw new Error()
+    }
+}
+
 
 const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
     // console.log('TodoItems')
     const [itemOnUpdateId, setItemOnUpdateId] = useState(-1)
     const [text, setText] = useState('')
-    
-    const [todoItems, setTodoItems] = useState<Item[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [hasError, setHasError] = useState(false)
+    const [state, dispatch] = useReducer(todoItemsReducer, { data: [], isLoading: false, hasError: false})
 
     useEffect(() => {
-        setIsLoading(true)
         async function fetchTodoItems() {
             // console.log('TodoItems: fetchTodoItems')
-            const response = await axios.get(`/api/todoitems?todoId=${todoListId}`)
-            
-            if(response.statusText !== 'OK') {
-                setHasError(true)
-                setIsLoading(false)
-                return
-            }
-            const data = await response.data
 
-            if (data.todoItems) {
-                setTodoItems(data.todoItems)
-                setIsLoading(false)
+            try {
+                const response = await axios.get(`/api/todoitems?todoId=${todoListId}`)
+                const {todoItems} = await response.data           
+                dispatch({ type: 'TODOITEMS_FETCH_SUCCESS', payload: todoItems })
+            } catch {
+                dispatch({ type: 'TODOITEMS_FETCH_ERROR'})
             }
+        
         }
-    
+        dispatch({ type: 'TODOITEMS_FETCH_INIT'})
         fetchTodoItems()
     }, [todoListId])
     
 
     const handleUpdate = async (todoItem: Item, itemUpdateInput: Prisma.ItemUpdateInput) => {
         // console.log('TodoItems: handleUpdate')
-        const response = await axios.post(`/api/todoitems/update`,{
-            todoItem, 
-            itemUpdateInput
-        })
+        try {
+            const response = await axios.post(`/api/todoitems/update`,{
+                todoItem, 
+                itemUpdateInput
+            })
+            if (response.statusText !== 'OK') {
+                throw new Error(response.statusText)
+            }
+            const updatedTodoItem = await response.data
 
-        if (response.statusText !== 'OK') {
-            throw new Error(response.statusText)
+            dispatch({ type: 'UPDATE_TODOITEM', payload: updatedTodoItem})
+
+        } catch {
+            throw new Error('TodoItems: Handle Update: Feature Unimplemented')
         }
-
-        const updatedTodoItem = await response.data
-        const updatedTodoItemIndex = todoItems.findIndex(i => i.id == todoItem.id)
-        const updatedList = [...todoItems]
-        updatedList[updatedTodoItemIndex] = updatedTodoItem
-        setTodoItems(updatedList)
-
     }
 
     const handleDelete = async (deletedItem: Item) => {
         // console.log('TodoItems: handleUpdate')
-        const response = await axios.post(`/api/todoitems/delete`, deletedItem)
 
-        if (response.statusText !== 'OK') {
-            throw new Error(response.statusText)
+        try {
+            const response = await axios.post(`/api/todoitems/delete`, deletedItem)
+    
+            if (response.statusText !== 'OK') {
+                throw new Error(response.statusText)
+            }
+    
+            const deletedTodoItem = await response.data
+            dispatch({ type: 'DELETE_TODOITEM', payload: deletedTodoItem })
+
+        } catch {
+            throw new Error('TodoItems: Handle Delete: Feature Unimplemented')
         }
 
-        const deletedTodoItem = await response.data
+    }
 
-        const deletedTodoItemIndex = todoItems.findIndex(i => i.id == deletedItem.id)
-        const updatedList = [...todoItems]
-        updatedList.splice(deletedTodoItemIndex, 1)
-        setTodoItems(updatedList)
+    const handleCreate = async (newTodoItemInput: Prisma.ItemCreateInput) => {
+        try {
+            const newTodoItem = await saveTodoItem(newTodoItemInput)
+
+            dispatch({ type: 'CREATE_TODOITEM', payload: newTodoItem})
+        } catch {
+
+            throw new Error('TodoItems: Handle Create: Feature Unimplemented')
+
+        }
     }
 
     const handleItemOnUpdateIdChanged = (itemId: number) => {
@@ -101,8 +182,7 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
                         }},
                         text: text
                     }
-                    const newlyStoredTodoItem = await saveTodoItem(newTodoItemInput)
-                    setTodoItems([...todoItems, newlyStoredTodoItem])
+                    handleCreate(newTodoItemInput)
                     setText('')
                 }}
             >
@@ -118,7 +198,7 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
                     <PlusCircleIcon className="w-8 h-12 ml-8"/>
                 </button>
             </form>
-            {!isLoading && !hasError && todoItems?.map((item, i) => (
+            {!state.isLoading && !state.hasError && state.data?.map((item, i) => (
                 <div key={i} className='mt-4'>
                     <TodoItem
                         key={item.id}

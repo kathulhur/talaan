@@ -40,6 +40,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todoItem, onUpdate, onDelete, itemO
                             className="mx-2"
                             onClick={(e) => {
                                 e.preventDefault()
+                                setText(todoItem.text)
                                 onItemOnUpdateIndexChanged(-1)
                             }}   
                         >
