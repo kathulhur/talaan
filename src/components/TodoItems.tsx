@@ -130,7 +130,7 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
             dispatch({ type: 'UPDATE_TODOITEM', payload: updatedTodoItem})
 
         } catch {
-            throw new Error('TodoItems: Handle Update: Feature Unimplemented')
+            // throw new Error('TodoItems: Handle Update: Feature Unimplemented')
         }
     }
 
@@ -148,7 +148,7 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
             dispatch({ type: 'DELETE_TODOITEM', payload: deletedTodoItem })
 
         } catch {
-            throw new Error('TodoItems: Handle Delete: Feature Unimplemented')
+            // throw new Error('TodoItems: Handle Delete: Feature Unimplemented')
         }
 
     }
@@ -160,7 +160,7 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
             dispatch({ type: 'CREATE_TODOITEM', payload: newTodoItem})
         } catch {
 
-            throw new Error('TodoItems: Handle Create: Feature Unimplemented')
+            // throw new Error('TodoItems: Handle Create: Feature Unimplemented')
 
         }
     }

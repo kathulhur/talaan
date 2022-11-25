@@ -118,7 +118,7 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
 
     const handleUpdate = (updatedTodoList: TodoList) => {
         // console.log('TodoLists: handleUpdate')
-        throw new Error('TodoLists:handleUpdate:Unimplemented')
+        // throw new Error('TodoLists:handleUpdate:Unimplemented')
         // const updatedTodoListIndex = todoLists.findIndex((t) => t.id == updatedTodoList.id)
         // const updatedList = [...todoLists]
         // updatedList[updatedTodoListIndex] = updatedTodoList
@@ -139,7 +139,7 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             const newlyStoredTodoItem = await saveTodoList(newTodoListInput)
             dispatch({ type: 'CREATE_TODOLIST', payload: newlyStoredTodoItem})
         } catch {
-            throw new Error('Handle Create: Feature Unimplemented')
+            // throw new Error('Handle Create: Feature Unimplemented')
         }
     }
 
@@ -155,7 +155,7 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             dispatch({ type: 'DELETE_TODOLIST', payload: deletedTodoList })
 
         } catch {
-            throw new Error('Handle DELETE: Feature Unimplemented')
+            // throw new Error('Handle DELETE: Feature Unimplemented')
         }
     }
 
