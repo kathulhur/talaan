@@ -3,15 +3,16 @@ import { Item, Prisma } from "@prisma/client"
 import axios from "axios"
 import { Reducer, useEffect, useReducer, useState } from "react"
 import { TodoItemsProps } from "../types/propTypes"
+import isRequestSuccessful from "../utils/isRequestSuccessful"
 import TodoItem from "./TodoItem"
 
 
 async function saveTodoItem(todoItemInput: Prisma.ItemCreateInput) {
     const response = await axios.post('/api/todoitems/create', todoItemInput)
 
-    if (response.statusText !== 'OK') {
-        throw new Error(response.statusText)
-    }
+    if (!isRequestSuccessful(response.status)) {
+        throw new Error('Error Saving Todo Item')
+}
 
     return await response.data
 }
@@ -86,14 +87,12 @@ const todoItemsReducer: Reducer<todoItemState, TodoListsAction> = (state: todoIt
 
 
         default:
-            console.log('default')
             throw new Error()
     }
 }
 
 
 const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
-    console.log(process.env.NODE_ENV)
     // console.log('TodoItems')
     const [itemOnUpdateId, setItemOnUpdateId] = useState(-1)
     const [text, setText] = useState('')
@@ -105,6 +104,11 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
 
             try {
                 const response = await axios.get(`/api/todoitems?todoId=${todoListId}`)
+
+                if (!isRequestSuccessful(response.status)) {
+                    throw new Error('Error Fetching todoItems')
+                }
+
                 const {todoItems} = await response.data           
                 dispatch({ type: 'TODOITEMS_FETCH_SUCCESS', payload: todoItems })
             } catch {
@@ -124,9 +128,11 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
                 todoItem, 
                 itemUpdateInput
             })
-            if (response.statusText !== 'OK') {
-                throw new Error(response.statusText)
+
+            if (!isRequestSuccessful(response.status)) {
+                    throw new Error('Error Updating Todo Item')
             }
+
             const updatedTodoItem = await response.data
 
             dispatch({ type: 'UPDATE_TODOITEM', payload: updatedTodoItem})
@@ -142,8 +148,8 @@ const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
         try {
             const response = await axios.post(`/api/todoitems/delete`, deletedItem)
     
-            if (response.statusText !== 'OK') {
-                throw new Error(response.statusText)
+            if (!isRequestSuccessful(response.status)) {
+                    throw new Error('Error Deleting Todo Item')
             }
     
             const deletedTodoItem = await response.data

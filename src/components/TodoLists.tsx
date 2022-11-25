@@ -2,6 +2,7 @@ import { PlusIcon } from "@heroicons/react/24/outline"
 import { Prisma, TodoList } from "@prisma/client"
 import axios from "axios"
 import { Reducer, useEffect, useReducer, useState } from "react"
+import isRequestSuccessful from "../utils/isRequestSuccessful"
 import AddTodoModal from "./AddTodoModal"
 import TodoListComponent from "./TodoList"
 
@@ -88,12 +89,10 @@ const todoListsReducer: Reducer<todoListsState, TodoListsAction> = (state: todoL
 
 async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
     const response = await axios.post('/api/todolists/create', todoListCreateInput)
-    console.log(response.statusText)
-    console.log(response)
-    console.log(response.statusText !== 'OK')
-    // if (response.statusText !== 'OK') {
-    //     throw new Error(response.statusText)
-    // }
+    if (!isRequestSuccessful(response.status)) {
+        throw new Error('Error Saving Todo List')
+    }
+
     return response.data
 }
 
@@ -106,6 +105,9 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
         const fetchTodoLists = async () => {
             try {
                 const response = await axios.get(`/api/todolists?userId=${userId}`)
+                if (!isRequestSuccessful(response.status)) {
+                    throw new Error('Error fetching Todo Lists')
+                }
                 dispatch({ type: 'TODOLISTS_FETCH_SUCCESS', payload: response.data.todoLists })
             } catch {
                 dispatch({ type: 'TODOLISTS_FETCH_ERROR'})
@@ -134,17 +136,23 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             title,
             note
         }
+        
+        try {
+            const newTodoList = await saveTodoList(newTodoListInput)
+            dispatch({ type: 'CREATE_TODOLIST', payload: newTodoList})
 
-        const newTodoList = await saveTodoList(newTodoListInput)
-        dispatch({ type: 'CREATE_TODOLIST', payload: newTodoList})
-        // throw new Error('Handle Create: Feature Unimplemented')
+        } catch {
+            throw new Error('Error creating Todo List')
+
+        }
     }
 
     const handleDelete = async (todoList: TodoList) => {
         // console.log('TodoLists: handleDelete')
         try {
             const response = await axios.post(`/api/todolists/delete`, todoList)
-            if (response.statusText !== 'OK') {
+
+            if (!isRequestSuccessful(response.status)) {
                 throw new Error(response.statusText)
             }
 
@@ -152,7 +160,7 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             dispatch({ type: 'DELETE_TODOLIST', payload: deletedTodoList })
 
         } catch {
-            // throw new Error('Handle DELETE: Feature Unimplemented')
+            throw new Error('Error deleting Todo List')
         }
     }
 
