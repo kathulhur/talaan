@@ -86,6 +86,7 @@ const todoItemsReducer: Reducer<todoItemState, TodoListsAction> = (state: todoIt
 
 
         default:
+            console.log('default')
             throw new Error()
     }
 }
