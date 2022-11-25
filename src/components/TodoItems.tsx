@@ -23,7 +23,7 @@ export interface todoItemState {
 }
 
 type TodoListsAction = {
-    type: string
+    type: 'TODOITEMS_FETCH_INIT' | 'TODOITEMS_FETCH_SUCCESS' | 'TODOITEMS_FETCH_ERROR' | 'DELETE_TODOITEM' | 'CREATE_TODOITEM' | 'UPDATE_TODOITEM'
     payload?: any
 }
 
@@ -93,6 +93,7 @@ const todoItemsReducer: Reducer<todoItemState, TodoListsAction> = (state: todoIt
 
 
 const TodoItems: React.FC<TodoItemsProps> = ({todoListId}) => {
+    console.log(process.env.NODE_ENV)
     // console.log('TodoItems')
     const [itemOnUpdateId, setItemOnUpdateId] = useState(-1)
     const [text, setText] = useState('')

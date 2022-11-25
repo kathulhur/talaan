@@ -16,7 +16,7 @@ export interface todoListsState {
 }
 
 type TodoListsAction = {
-    type: string
+    type: 'TODOLISTS_FETCH_INIT' | 'TODOLISTS_FETCH_SUCCESS' | 'TODOLISTS_FETCH_ERROR' | 'DELETE_TODOLIST' | 'CREATE_TODOLIST' | 'UPDATE_TODOLIST'
     payload?: any
 }
 
@@ -97,9 +97,7 @@ async function saveTodoList(todoListCreateInput: Prisma.TodoListCreateInput) {
 
 const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
     const [state, dispatch] = useReducer(todoListsReducer, { data: [], isLoading: false, hasError: false})
-
     const [show, setShow] = useState(false)
-    const [todoLists, setTodoLists] = useState<TodoList[]>([])
 
     useEffect(() => {
         
@@ -135,12 +133,9 @@ const TodoLists: React.FC<TodoListsProps> = ({userId}) => {
             note
         }
 
-        try {
-            const newlyStoredTodoItem = await saveTodoList(newTodoListInput)
-            dispatch({ type: 'CREATE_TODOLIST', payload: newlyStoredTodoItem})
-        } catch {
-            // throw new Error('Handle Create: Feature Unimplemented')
-        }
+        const newTodoList = await saveTodoList(newTodoListInput)
+        dispatch({ type: 'CREATE_TODOLIST', payload: newTodoList})
+        // throw new Error('Handle Create: Feature Unimplemented')
     }
 
     const handleDelete = async (todoList: TodoList) => {
